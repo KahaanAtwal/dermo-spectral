@@ -1,0 +1,12 @@
+:root {
+  font-family: 'DM Sans', 'Helvetica Neue', sans-serif;
+  color: #e7edf0;
+  background: #0c1115;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+body { margin: 0; min-width: 320px; }
+button, input { font: inherit; }
+button { cursor: pointer; }
