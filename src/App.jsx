@@ -15,17 +15,33 @@ function App() {
   const [isDragging, setIsDragging] = useState(false)
   const [isCameraOpen, setIsCameraOpen] = useState(false)
   const [cameraError, setCameraError] = useState('')
+  const [fileError, setFileError] = useState('')
   const fileInputRef = useRef(null)
   const workspaceRef = useRef(null)
   const videoRef = useRef(null)
   const streamRef = useRef(null)
+  const imageUrlRef = useRef(null)
+
+  const stopCamera = () => {
+    streamRef.current?.getTracks().forEach((track) => track.stop())
+    streamRef.current = null
+    setIsCameraOpen(false)
+  }
 
   const loadFile = (file) => {
-    if (!file || !file.type.startsWith('image/')) return
-    setImageUrl(URL.createObjectURL(file))
+    const isSupportedImage = file && ['image/png', 'image/jpeg'].includes(file.type)
+    if (!isSupportedImage) {
+      setFileError('Choose a PNG, JPG, or JPEG image to continue.')
+      return
+    }
+    if (imageUrlRef.current) URL.revokeObjectURL(imageUrlRef.current)
+    const nextImageUrl = URL.createObjectURL(file)
+    imageUrlRef.current = nextImageUrl
+    setImageUrl(nextImageUrl)
     setFileName(file.name)
     setRoi(null)
-    setIsCameraOpen(false)
+    stopCamera()
+    setFileError('')
   }
 
   const getPoint = (event) => {
@@ -52,9 +68,7 @@ function App() {
 
   const toggleCamera = async () => {
     if (isCameraOpen) {
-      streamRef.current?.getTracks().forEach((track) => track.stop())
-      streamRef.current = null
-      setIsCameraOpen(false)
+      stopCamera()
       return
     }
     setCameraError('')
@@ -66,13 +80,21 @@ function App() {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true })
       streamRef.current = stream
       setIsCameraOpen(true)
-      if (videoRef.current) videoRef.current.srcObject = stream
     } catch {
       setCameraError('Camera access was unavailable. Check browser permissions.')
     }
   }
 
-  useEffect(() => () => streamRef.current?.getTracks().forEach((track) => track.stop()), [])
+  useEffect(() => {
+    if (isCameraOpen && videoRef.current && streamRef.current) {
+      videoRef.current.srcObject = streamRef.current
+    }
+  }, [isCameraOpen])
+
+  useEffect(() => () => {
+    streamRef.current?.getTracks().forEach((track) => track.stop())
+    if (imageUrlRef.current) URL.revokeObjectURL(imageUrlRef.current)
+  }, [])
 
   const normalizedRoi = roi && {
     left: `${Math.min(roi.startX, roi.startX + roi.width)}%`,
@@ -99,7 +121,7 @@ function App() {
             {imageUrl && !isDragging && !roi && <div className="workspace-hint">Click and drag to define a region of interest</div>}
           </div>
           <div className="workspace-footer"><div className="file-status"><span className="file-icon">▧</span><div><b>{fileName}</b><small>{imageUrl ? 'Ready for analysis' : 'Awaiting image input'}</small></div></div><div className="workspace-actions"><input ref={fileInputRef} type="file" accept=".png,.jpg,.jpeg,image/png,image/jpeg" onChange={(event) => loadFile(event.target.files?.[0])} hidden /><button type="button" className="secondary-button" onClick={() => fileInputRef.current?.click()}>Import image</button><button type="button" className={`camera-button ${isCameraOpen ? 'active' : ''}`} onClick={toggleCamera}><span>◉</span>{isCameraOpen ? 'Close camera' : 'Live capture'}</button></div></div>
-          {cameraError && <p className="inline-error" role="alert">{cameraError}</p>}
+          {(cameraError || fileError) && <p className="inline-error" role="alert">{cameraError || fileError}</p>}
         </section>
         <aside className="calibration-panel" aria-label="Calibration controls"><div className="section-heading panel-heading"><div><p className="eyebrow">02 / Analysis setup</p><h2>Calibration</h2></div><span className="settings-icon">⌘</span></div><p className="panel-intro">Choose a reference mode to tune how tissue signals are interpreted.</p><div className="mode-list">{calibrationModes.map(([id, label, detail, icon]) => <button key={id} type="button" className={`mode-card ${activeMode === id ? 'selected' : ''}`} onClick={() => setActiveMode(id)} aria-pressed={activeMode === id}><span className="mode-icon">{icon}</span><span className="mode-copy"><b>{label}</b><small>{detail}</small></span><span className="radio-indicator" /></button>)}</div><div className="calibration-note"><span>✦</span><p><b>Tip</b> Include a neutral white reference in frame when available for more consistent results.</p></div><div className="panel-bottom"><div><span>Input color space</span><b>sRGB / 8-bit</b></div><div><span>Capture condition</span><b>Uncalibrated</b></div></div></aside>
       </div>
