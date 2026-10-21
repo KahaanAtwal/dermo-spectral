@@ -81,3 +81,31 @@ h2 { color: #f0f4f3; font-size: 23px; font-weight: 500; letter-spacing: -.7px; m
 .app-footer { border-top: 1px solid var(--line); color: #536367; display: flex; font: 9px 'DM Mono', monospace; justify-content: space-between; margin: 0 auto; max-width: 1440px; padding: 18px 48px; }
 @media (max-width: 860px) { .clinical-header, .dashboard-grid, .app-footer { padding-left: 22px; padding-right: 22px; } .dashboard-grid { grid-template-columns: 1fr; padding-top: 35px; } .image-workspace { min-height: 360px; } }
 @media (max-width: 560px) { .clinical-header { align-items: flex-start; gap: 18px; } .header-status span { display: none; } h1 { line-height: 1.5; } h1 span { display: block; } .section-heading { align-items: flex-start; flex-direction: column; gap: 10px; } .workspace-footer, .app-footer { align-items: flex-start; flex-direction: column; gap: 16px; } .workspace-actions { flex-wrap: wrap; } .workspace-hint { font-size: 9px; max-width: calc(100% - 26px); overflow: hidden; text-overflow: ellipsis; } }
+.heatmap-viewer { inset: 0; pointer-events: none; position: absolute; z-index: 2; }
+.heatmap-canvas { height: 100%; image-rendering: pixelated; width: 100%; }
+.heatmap-mode-label { background: rgba(12, 25, 28, .86); color: #e9ff8c; font: 9px 'DM Mono', monospace; left: 15px; padding: 7px 9px; position: absolute; top: 15px; }
+.overlay-controls { align-items: center; border-bottom: 1px solid var(--line); display: flex; gap: 18px; justify-content: flex-end; padding: 14px 0 15px; }
+.overlay-controls label { color: #829296; font: 10px 'DM Mono', monospace; text-transform: uppercase; }
+.overlay-controls output { color: var(--accent); display: inline-block; min-width: 33px; text-align: right; }
+.overlay-controls input { accent-color: var(--accent); width: 150px; }
+.top-bench { margin: 0 auto; max-width: 1440px; padding: 25px 48px 0; }
+.lower-dashboard { margin: 0 auto; max-width: 1440px; padding: 0 48px 60px; }
+.calibration-bench, .metrics-card { background: rgba(17, 26, 31, .78); border: 1px solid var(--line); padding: 24px 22px 22px; }
+.bench-heading { align-items: end; display: flex; justify-content: space-between; margin-bottom: 18px; }
+.bench-note, .metrics-status { color: #68797d; font: 9px 'DM Mono', monospace; letter-spacing: .5px; text-transform: uppercase; }
+.target-list { display: grid; gap: 10px; grid-template-columns: repeat(3, 1fr); }
+.target-card { background: #141e23; border: 1px solid #28383c; color: var(--ink); min-width: 0; padding: 0 0 12px; position: relative; text-align: left; }
+.target-card:hover, .target-card.selected { border-color: #92ab67; transform: translateY(-2px); }
+.target-card.selected { box-shadow: inset 0 3px var(--accent); }
+.target-preview { display: block; height: 105px; object-fit: cover; width: 100%; }
+.target-copy { display: flex; flex-direction: column; gap: 5px; padding: 11px 12px 0; }
+.target-copy b { color: #b9c9c4; font: 10px 'DM Mono', monospace; }
+.target-copy em { color: #eef3ed; display: block; font: 600 11px 'DM Sans', sans-serif; font-style: normal; margin-top: 4px; }
+.target-copy small { color: #718184; font-size: 10px; }
+.target-check { color: var(--accent); font: 16px 'DM Mono', monospace; position: absolute; right: 10px; top: 114px; }
+.metric-grid { display: grid; gap: 10px; grid-template-columns: repeat(3, 1fr); }
+.metric { background: #141e23; border: 1px solid #27363b; display: grid; grid-template-columns: 1fr auto; padding: 13px 14px; }
+.metric span, .metric small { color: #809194; font: 10px 'DM Mono', monospace; }
+.metric strong { color: var(--accent); font: 500 20px 'DM Mono', monospace; grid-row: span 2; padding-left: 8px; }
+.metric small { color: #586b70; font-size: 9px; margin-top: 6px; }
+@media (max-width: 860px) { .top-bench, .lower-dashboard { padding-left: 22px; padding-right: 22px; } .metric-grid { grid-template-columns: 1fr; } }

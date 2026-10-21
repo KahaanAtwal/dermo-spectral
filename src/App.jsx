@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import './App.css'
+import PresetCalibrationBench, { makeConcentration, TARGETS } from './PresetCalibrationBench'
+import SpectralHeatmapViewer from './SpectralHeatmapViewer'
 
 const calibrationModes = [
   ['white-balance', 'White Balance Reference', 'Neutral reference for color correction', '◌'],
@@ -15,6 +17,9 @@ function App() {
   const [isDragging, setIsDragging] = useState(false)
   const [isCameraOpen, setIsCameraOpen] = useState(false)
   const [cameraError, setCameraError] = useState('')
+  const [selectedTarget, setSelectedTarget] = useState(null)
+  const [heatmapOpacity, setHeatmapOpacity] = useState(58)
+  const [concentrationData, setConcentrationData] = useState(() => makeConcentration(TARGETS[2]))
   const [fileError, setFileError] = useState('')
   const fileInputRef = useRef(null)
   const workspaceRef = useRef(null)
@@ -42,6 +47,15 @@ function App() {
     setRoi(null)
     stopCamera()
     setFileError('')
+  }
+
+  const selectTarget = (target) => {
+    setImageUrl(target.dataUrl)
+    setFileName(`${target.shortLabel} · synthetic`)
+    setSelectedTarget(target)
+    setConcentrationData(target.concentrationData)
+    setRoi(null)
+    setIsCameraOpen(false)
   }
 
   const getPoint = (event) => {
@@ -109,11 +123,13 @@ function App() {
         <div className="brand-lockup"><div className="brand-mark" aria-hidden="true">D<span>•</span>S</div><div><p className="eyebrow">Clinical imaging workspace</p><h1>DermoSpectral <span>Tissue Optics Analyzer</span></h1></div></div>
         <div className="header-status"><i /> System ready <span>v0.1.0</span></div>
       </header>
+      <div className="top-bench"><PresetCalibrationBench selectedId={selectedTarget?.id} onSelect={selectTarget} /></div>
       <div className="dashboard-grid">
         <section className="workspace-column" aria-label="Image workspace">
           <div className="section-heading"><div><p className="eyebrow">01 / Image workspace</p><h2>Load a tissue image</h2></div><div className="workspace-meta"><span className="status-dot" /> ROI tool active</div></div>
           <div ref={workspaceRef} className={`image-workspace ${imageUrl ? 'has-image' : ''} ${isCameraOpen ? 'camera-active' : ''}`} onPointerDown={startRoi} onPointerMove={updateRoi} onPointerUp={() => setIsDragging(false)} onPointerCancel={() => setIsDragging(false)} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); loadFile(event.dataTransfer.files?.[0]) }}>
             {imageUrl && <img src={imageUrl} alt="Uploaded skin tissue" className="uploaded-image" />}
+            {imageUrl && !isCameraOpen && <SpectralHeatmapViewer concentrationData={concentrationData} mode={activeMode === 'hemoglobin' ? 'Ch' : 'Cm'} opacity={heatmapOpacity} />}
             {isCameraOpen && <video ref={videoRef} className="camera-feed" autoPlay playsInline muted />}
             {!imageUrl && !isCameraOpen && <div className="dropzone-content"><div className="upload-orbit" aria-hidden="true"><span>↑</span></div><h3>Drop an image to begin</h3><p>or choose a high-resolution skin photograph</p><button type="button" className="primary-button" onClick={() => fileInputRef.current?.click()}><span>＋</span> Select image</button><p className="format-note">PNG, JPG or JPEG <b>·</b> up to 20 MB</p></div>}
             {isCameraOpen && <div className="camera-label"><i /> LIVE CAMERA</div>}
@@ -125,6 +141,7 @@ function App() {
         </section>
         <aside className="calibration-panel" aria-label="Calibration controls"><div className="section-heading panel-heading"><div><p className="eyebrow">02 / Analysis setup</p><h2>Calibration</h2></div><span className="settings-icon">⌘</span></div><p className="panel-intro">Choose a reference mode to tune how tissue signals are interpreted.</p><div className="mode-list">{calibrationModes.map(([id, label, detail, icon]) => <button key={id} type="button" className={`mode-card ${activeMode === id ? 'selected' : ''}`} onClick={() => setActiveMode(id)} aria-pressed={activeMode === id}><span className="mode-icon">{icon}</span><span className="mode-copy"><b>{label}</b><small>{detail}</small></span><span className="radio-indicator" /></button>)}</div><div className="calibration-note"><span>✦</span><p><b>Tip</b> Include a neutral white reference in frame when available for more consistent results.</p></div><div className="panel-bottom"><div><span>Input color space</span><b>sRGB / 8-bit</b></div><div><span>Capture condition</span><b>Uncalibrated</b></div></div></aside>
       </div>
+      <div className="lower-dashboard"><section className="metrics-card" aria-labelledby="metrics-title"><div className="bench-heading"><div><p className="eyebrow">04 / ROI readout</p><h2 id="metrics-title">Calibration metrics</h2></div><span className="metrics-status">{selectedTarget ? 'TARGET LOADED' : 'AWAITING TARGET'}</span></div><div className="metric-grid"><div className="metric"><span>Mean Melanin Index</span><strong>{selectedTarget ? selectedTarget.melanin.toFixed(2) : '—'}</strong><small>within selected ROI</small></div><div className="metric"><span>Mean Hemoglobin Perfusion</span><strong>{selectedTarget ? selectedTarget.hemoglobin.toFixed(2) : '—'}</strong><small>within selected ROI</small></div><div className="metric"><span>White-balance SNR</span><strong>{selectedTarget ? `${selectedTarget.snr.toFixed(1)} dB` : '—'}</strong><small>calibration signal quality</small></div></div></section></div>
       <footer className="app-footer"><span>DERMOSPECTRAL / RESEARCH PREVIEW</span><span>Privacy-first · Images stay in your browser</span></footer>
     </main>
   )
